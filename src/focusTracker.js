@@ -66,14 +66,16 @@ class FocusTracker extends EventEmitter {
     }
     if (line.startsWith('FOCUS|')) {
       const parts = line.split('|');
-      const rect = {
-        left: parseInt(parts[1], 10),
-        top: parseInt(parts[2], 10),
-        right: parseInt(parts[3], 10),
-        bottom: parseInt(parts[4], 10),
+      // FOCUS|hwnd|left|top|right|bottom
+      const state = {
+        hwnd: parseInt(parts[1], 10) || 0,
+        left: parseInt(parts[2], 10),
+        top: parseInt(parts[3], 10),
+        right: parseInt(parts[4], 10),
+        bottom: parseInt(parts[5], 10),
       };
-      if ([rect.left, rect.top, rect.right, rect.bottom].every(Number.isFinite)) {
-        this.emit('focus', rect);
+      if ([state.left, state.top, state.right, state.bottom].every(Number.isFinite)) {
+        this.emit('focus', state);
       }
     }
   }

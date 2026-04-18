@@ -2,8 +2,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('zenith', {
   refine: (text) => ipcRenderer.invoke('llm:refine', text),
-  copyToClipboard: (text) => ipcRenderer.invoke('clipboard:write', text),
+  applyReplacement: (text) => ipcRenderer.invoke('apply:replace', text),
   expand: () => ipcRenderer.invoke('overlay:expand'),
+  resizePopover: (height) => ipcRenderer.invoke('overlay:resize', height),
   hide: () => ipcRenderer.send('overlay:hide'),
   onReset: (handler) => {
     const listener = (_evt, payload) => handler(payload);

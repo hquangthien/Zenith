@@ -1,7 +1,6 @@
 const fabView = document.getElementById('fabView');
 const popoverView = document.getElementById('popoverView');
 const fabBtn = document.getElementById('fabBtn');
-const closeBtn = document.getElementById('closeBtn');
 const loaderEl = document.getElementById('loader');
 const errorEl = document.getElementById('error');
 const errorMsgEl = errorEl.querySelector('.error__msg');
@@ -14,6 +13,7 @@ const tabs = document.querySelectorAll('.tab');
 let currentSource = '';
 let variations = null;
 let activeKey = 'professional';
+let lastReportedHeight = 0;
 
 function showFab() {
   fabView.hidden = false;
@@ -69,9 +69,9 @@ applyBtn.addEventListener('click', async () => {
   if (!variations) return;
   const text = variations[activeKey];
   if (!text) return;
-  await window.zenith.copyToClipboard(text);
   applyBtn.classList.add('applied');
-  setTimeout(() => window.zenith.hide(), 480);
+  // Main will handle clipboard, hide Zenith, send Ctrl+V to previous app, then restore clipboard.
+  await window.zenith.applyReplacement(text);
 });
 
 async function startRefine() {
@@ -91,16 +91,28 @@ async function startRefine() {
 
 fabBtn.addEventListener('click', async () => {
   showPopover();
-  await window.zenith.expand();
+  const result = await window.zenith.expand();
+  if (result && typeof result.source === 'string' && result.source.trim()) {
+    currentSource = result.source;
+  }
   startRefine();
 });
 
-closeBtn.addEventListener('click', () => window.zenith.hide());
 retryBtn.addEventListener('click', () => startRefine());
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') window.zenith.hide();
 });
+
+// Size the window to the popover's natural height.
+const ro = new ResizeObserver(() => {
+  if (popoverView.hidden) return;
+  const h = Math.ceil(popoverView.getBoundingClientRect().height);
+  if (h <= 0 || Math.abs(h - lastReportedHeight) < 2) return;
+  lastReportedHeight = h;
+  window.zenith.resizePopover(h);
+});
+ro.observe(popoverView);
 
 window.zenith.onReset(({ source }) => {
   currentSource = source || '';
@@ -110,5 +122,6 @@ window.zenith.onReset(({ source }) => {
   errorEl.hidden = true;
   loaderEl.hidden = true;
   draftEl.hidden = true;
+  lastReportedHeight = 0;
   showFab();
 });
