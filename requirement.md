@@ -4,8 +4,9 @@
 This Proof of Concept (PoC) aims to demonstrate the core value of our AI communication assistant for Vietnamese engineers. The focus is on rapid, low-latency implementation: capturing text, processing it via a locally hosted LLM, and displaying Grammarly-style inline suggestions. The system runs entirely locally to maximize speed and data privacy, with no database required for this initial milestone.
 
 ## 2. Architecture & Technology Stack
-The system is built as a single desktop application communicating with a local AI service:
-* **Frontend/App (`zenith-app`):** Electron (HTML/CSS/JS or React) responsible for the UI, OS-level text interaction, the transparent desktop overlay, and application logic (via the Main process).
+The system is built as a single desktop application communicating with a local AI service. Supports Windows and macOS.
+
+* **Frontend/App (`zenith-app`):** Electron (HTML/CSS/JS or React) responsible for the UI, OS-level text interaction, the transparent desktop overlay, and application logic (via the Main process). Uses platform-specific scripts for focus detection and text injection.
 * **Local LLM Provider:** A common local LLM engine that exposes a REST API (e.g., Ollama running on `localhost:1234` or LM Studio's local server).
 
 ## 3. UI/UX Requirements

@@ -18,7 +18,8 @@
       "src/**/*.js",
       "src/**/*.html",
       "src/**/*.css",
-      "src/**/*.ps1"
+      "src/**/*.ps1",
+      "src/**/*.sh"
     ]
   }
 }
