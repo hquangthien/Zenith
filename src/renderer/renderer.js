@@ -10,6 +10,7 @@ const draftTextEl = document.getElementById('draftText');
 const applyBtn = document.getElementById('applyBtn');
 const tabs = document.querySelectorAll('.tab');
 
+let role = 'fab'; // 'fab' or 'popover' — set by main via onSetMode
 let currentSource = '';
 let variations = null;
 let activeKey = 'professional';
@@ -61,6 +62,19 @@ function renderVariations(data) {
   setActiveTab(activeKey);
 }
 
+function resetPopoverState() {
+  variations = null;
+  activeKey = 'professional';
+  setActiveTab('professional');
+  draftTextEl.textContent = '';
+  errorEl.hidden = true;
+  draftEl.hidden = true;
+  // Loader visible by default so the next show lands on the loading state, not stale content.
+  loaderEl.hidden = false;
+  applyBtn.classList.remove('applied');
+  lastReportedHeight = 0;
+}
+
 tabs.forEach((t) => {
   t.addEventListener('click', () => setActiveTab(t.dataset.key));
 });
@@ -70,13 +84,12 @@ applyBtn.addEventListener('click', async () => {
   const text = variations[activeKey];
   if (!text) return;
   applyBtn.classList.add('applied');
-  // Main will handle clipboard, hide Zenith, send Ctrl+V to previous app, then restore clipboard.
   await window.zenith.applyReplacement(text);
 });
 
 async function startRefine() {
   if (!currentSource.trim()) {
-    setError('No text in clipboard. Copy some text (Ctrl+C) and reopen Zenith.');
+    setError('No text selected. Select some text and click the Z button.');
     return;
   }
   setLoading(true);
@@ -89,13 +102,9 @@ async function startRefine() {
   }
 }
 
-fabBtn.addEventListener('click', async () => {
-  showPopover();
-  const result = await window.zenith.expand();
-  if (result && typeof result.source === 'string' && result.source.trim()) {
-    currentSource = result.source;
-  }
-  startRefine();
+// FAB click (only effective in the FAB window; popoverView is shown elsewhere).
+fabBtn.addEventListener('click', () => {
+  window.zenith.expand();
 });
 
 retryBtn.addEventListener('click', () => startRefine());
@@ -104,9 +113,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') window.zenith.hide();
 });
 
-// Size the window to the popover's natural height.
+// Report popover height so main can size the window to content.
 const ro = new ResizeObserver(() => {
-  if (popoverView.hidden) return;
+  if (role !== 'popover' || popoverView.hidden) return;
   const h = Math.ceil(popoverView.getBoundingClientRect().height);
   if (h <= 0 || Math.abs(h - lastReportedHeight) < 2) return;
   lastReportedHeight = h;
@@ -114,14 +123,21 @@ const ro = new ResizeObserver(() => {
 });
 ro.observe(popoverView);
 
-window.zenith.onReset(({ source }) => {
+window.zenith.onSetMode((r) => {
+  role = r;
+  if (r === 'fab') {
+    showFab();
+  } else {
+    showPopover();
+    resetPopoverState();
+  }
+});
+
+window.zenith.onResetPopover(() => {
+  resetPopoverState();
+});
+
+window.zenith.onStartRefine(({ source }) => {
   currentSource = source || '';
-  variations = null;
-  activeKey = 'professional';
-  setActiveTab('professional');
-  errorEl.hidden = true;
-  loaderEl.hidden = true;
-  draftEl.hidden = true;
-  lastReportedHeight = 0;
-  showFab();
+  startRefine();
 });

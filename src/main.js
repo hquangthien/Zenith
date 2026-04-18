@@ -29,14 +29,16 @@ const EXPANDED_MAX_HEIGHT = 560;
 const LOST_DEBOUNCE_MS = 220;
 const PASTE_DELAY_MS = 150;
 const CLIPBOARD_RESTORE_MS = 700;
+const GAP = 10;
 
-let overlayWindow = null;
+let fabWindow = null;
+let popoverWindow = null;
 let mode = 'hidden'; // 'hidden' | 'fab' | 'popover'
 let losingTimer = null;
-let lastTargetHwnd = 0; // HWND of the user's editable window, captured while in fab mode
+let lastTargetHwnd = 0; // HWND of the user's editable window, captured in fab mode
 
-function createOverlay() {
-  overlayWindow = new BrowserWindow({
+function createFabWindow() {
+  fabWindow = new BrowserWindow({
     width: COLLAPSED.width,
     height: COLLAPSED.height,
     frame: false,
@@ -46,18 +48,44 @@ function createOverlay() {
     skipTaskbar: true,
     show: false,
     hasShadow: false,
-    focusable: false, // FAB mode: clicks don't steal focus from the user's app
+    focusable: false, // permanent — clicks don't steal focus from user's app
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+  fabWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  fabWindow.setAlwaysOnTop(true, 'screen-saver');
+  fabWindow.webContents.on('did-finish-load', () => {
+    fabWindow.webContents.send('set-mode', 'fab');
+  });
+}
 
-  overlayWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
-
-  overlayWindow.on('blur', () => {
+function createPopoverWindow() {
+  popoverWindow = new BrowserWindow({
+    width: EXPANDED_WIDTH,
+    height: EXPANDED_INITIAL_HEIGHT,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: false,
+    hasShadow: false,
+    focusable: true, // permanent — show() activates it cleanly, blur fires on app switch
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  popoverWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  popoverWindow.setAlwaysOnTop(true, 'screen-saver');
+  popoverWindow.webContents.on('did-finish-load', () => {
+    popoverWindow.webContents.send('set-mode', 'popover');
+  });
+  popoverWindow.on('blur', () => {
     if (mode === 'popover') hideOverlay();
   });
 }
@@ -82,26 +110,23 @@ function cancelLosingTimer() {
 
 function hideOverlay() {
   cancelLosingTimer();
-  if (overlayWindow && overlayWindow.isVisible()) overlayWindow.hide();
-  if (overlayWindow) overlayWindow.setFocusable(false); // ready for next FAB show
+  if (fabWindow && fabWindow.isVisible()) fabWindow.hide();
+  if (popoverWindow && popoverWindow.isVisible()) popoverWindow.hide();
   mode = 'hidden';
 }
 
 function placeFabForRect(rect) {
-  // Anchor FAB at the top-right corner of the editable rect.
-  // FAB visual is 31px centered in a 72px window; this positions the visual center
-  // at (rect.right - 20, rect.top + 20) — slightly inside the corner.
+  // Top-right of the editable rect; FAB visual center ~= (rect.right - 20, rect.top + 20).
   const x = rect.right - COLLAPSED.width + 16;
   const y = rect.top - 16;
   return clampToDisplay(x, y, COLLAPSED.width, COLLAPSED.height);
 }
 
 function showFabAt(bounds) {
-  overlayWindow.setBounds(bounds);
+  if (!fabWindow) return;
+  fabWindow.setBounds(bounds);
   if (mode !== 'fab') {
-    const source = clipboard.readText() || '';
-    overlayWindow.webContents.send('overlay:reset', { source });
-    overlayWindow.showInactive();
+    fabWindow.showInactive();
     mode = 'fab';
   }
 }
@@ -113,7 +138,7 @@ function showAtCursorFallback() {
 }
 
 function toggleOverlay() {
-  if (!overlayWindow) return;
+  if (!fabWindow) return;
   if (mode !== 'hidden') {
     hideOverlay();
   } else {
@@ -202,8 +227,8 @@ function parseVariations(content) {
 }
 
 async function captureSelectionFromTarget() {
-  // Since the FAB window is non-focusable, the user's app still has foreground at click time.
-  // We send Ctrl+C to copy the selection, read it, and restore the original clipboard.
+  // FAB window is non-focusable, so clicking it didn't steal activation.
+  // Ctrl+C goes to the user's app which still has foreground.
   const savedClipboard = clipboard.readText();
   const sentinel = '\u0001ZENITH_CAPTURE\u0001';
   try { clipboard.writeText(sentinel); } catch { /* ignore */ }
@@ -224,13 +249,11 @@ async function captureSelectionFromTarget() {
     }
   });
 
-  // Small wait for the clipboard to actually receive the copied selection.
   await new Promise((r) => setTimeout(r, 120));
 
   let captured = '';
   try { captured = clipboard.readText() || ''; } catch { /* ignore */ }
 
-  // Restore the user's original clipboard.
   try { clipboard.writeText(savedClipboard); } catch { /* ignore */ }
 
   if (!captured || captured === sentinel) return '';
@@ -268,12 +291,13 @@ function pasteIntoPreviousApp(text) {
 }
 
 app.whenReady().then(() => {
-  createOverlay();
+  createFabWindow();
+  createPopoverWindow();
 
   globalShortcut.register('CommandOrControl+Shift+Space', toggleOverlay);
 
   focusTracker.on('focus', (state) => {
-    if (!overlayWindow || mode === 'popover') return;
+    if (mode === 'popover') return;
     cancelLosingTimer();
     if (state.hwnd) lastTargetHwnd = state.hwnd;
     const bounds = placeFabForRect(state);
@@ -281,7 +305,7 @@ app.whenReady().then(() => {
   });
 
   focusTracker.on('lost', () => {
-    if (!overlayWindow || mode !== 'fab') return;
+    if (mode !== 'fab') return;
     cancelLosingTimer();
     losingTimer = setTimeout(() => {
       losingTimer = null;
@@ -303,41 +327,43 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('overlay:expand', async () => {
-    if (!overlayWindow) return { source: '' };
+    if (!fabWindow || !popoverWindow) return;
     cancelLosingTimer();
     mode = 'popover';
 
-    // Capture the selection from the user's app FIRST, while it still has foreground
-    // (the FAB window is non-focusable, so clicking it didn't steal activation).
+    // Reset popover DOM to loading state NOW, while the window is still hidden.
+    // The ~300ms capture below gives the renderer ample time to update before show().
+    popoverWindow.webContents.send('overlay:reset-popover');
+
     const source = await captureSelectionFromTarget();
     console.log(`[capture] selection length=${source.length}`);
 
-    // Anchor the popover's bottom-right near the FAB visual's top-left (with a small gap),
-    // so the popover appears to the top-left of the button.
-    const fabBounds = overlayWindow.getBounds();
-    const GAP = 8;
-    const anchorX = fabBounds.x + 20 - GAP; // FAB visual top-left X = fab_x + 20
-    const anchorY = fabBounds.y + 20 - GAP; // FAB visual top-left Y = fab_y + 20
+    // Anchor popover's bottom-right 10px from the FAB visual's top-left
+    // (FAB visual top-left = fab window top-left + 20,20 because the 31px visual is centered in a 72px window).
+    const fabBounds = fabWindow.getBounds();
+    const anchorX = fabBounds.x + 20 - GAP;
+    const anchorY = fabBounds.y + 20 - GAP;
     const popoverX = anchorX - EXPANDED_WIDTH;
     const popoverY = anchorY - EXPANDED_INITIAL_HEIGHT;
-
-    overlayWindow.setFocusable(true);
     const bounds = clampToDisplay(popoverX, popoverY, EXPANDED_WIDTH, EXPANDED_INITIAL_HEIGHT);
-    overlayWindow.setBounds(bounds);
-    overlayWindow.focus();
-    return { source };
+
+    fabWindow.hide();
+    popoverWindow.setBounds(bounds);
+    popoverWindow.show(); // activates cleanly (window was created focusable: true)
+    popoverWindow.focus();
+
+    popoverWindow.webContents.send('overlay:start-refine', { source });
   });
 
   ipcMain.handle('overlay:resize', (_evt, height) => {
-    if (!overlayWindow || mode !== 'popover') return;
-    const b = overlayWindow.getBounds();
+    if (!popoverWindow || mode !== 'popover') return;
+    const b = popoverWindow.getBounds();
     const h = Math.max(EXPANDED_MIN_HEIGHT, Math.min(EXPANDED_MAX_HEIGHT, Math.round(height)));
     if (Math.abs(h - b.height) < 2) return;
-    // Keep the popover's bottom edge anchored (it grows upward, preserving the
-    // bottom-right alignment with the FAB's top-left).
+    // Keep popover's bottom anchored (grow upward, preserving top-left-of-FAB alignment).
     const newY = b.y + b.height - h;
     const bounds = clampToDisplay(b.x, newY, EXPANDED_WIDTH, h);
-    overlayWindow.setBounds(bounds);
+    popoverWindow.setBounds(bounds);
   });
 
   ipcMain.on('overlay:hide', () => hideOverlay());
