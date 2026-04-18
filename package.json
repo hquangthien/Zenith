@@ -1,0 +1,24 @@
+{
+  "name": "zenith-app",
+  "version": "0.1.0",
+  "description": "Zenith - AI communication assistant for Vietnamese engineers (PoC)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electronmon ."
+  },
+  "author": "Zenith",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electronmon": "^2.0.3"
+  },
+  "electronmon": {
+    "patterns": [
+      "src/**/*.js",
+      "src/**/*.html",
+      "src/**/*.css",
+      "src/**/*.ps1"
+    ]
+  }
+}

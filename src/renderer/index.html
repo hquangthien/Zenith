@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <title>Zenith</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="fabView" class="fab-view">
+      <button id="fabBtn" class="fab" title="Refine with Zenith" aria-label="Refine">
+        <span class="fab__mark">Z</span>
+      </button>
+    </div>
+
+    <div id="popoverView" class="popover" hidden>
+      <header class="popover__header">
+        <div class="brand-label">
+          <span class="brand-dot"></span>
+          <span class="brand-text">Tone Selection</span>
+        </div>
+        <button id="closeBtn" class="icon-btn" title="Close (Esc)" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18"/>
+          </svg>
+        </button>
+      </header>
+
+      <nav class="tabs" role="tablist">
+        <button class="tab tab--active" data-key="professional" role="tab" aria-selected="true">Professional</button>
+        <button class="tab" data-key="peer" role="tab" aria-selected="false">Peer</button>
+        <button class="tab" data-key="standup" role="tab" aria-selected="false">Standup</button>
+      </nav>
+
+      <section class="draft-area">
+        <section id="loader" class="loader" hidden>
+          <div class="loader__dots">
+            <span class="loader__dot"></span>
+            <span class="loader__dot"></span>
+            <span class="loader__dot"></span>
+          </div>
+          <div class="loader__text">Generating variations…</div>
+        </section>
+
+        <section id="error" class="error" hidden>
+          <div class="error__msg"></div>
+          <button id="retryBtn" class="btn btn--ghost">Retry</button>
+        </section>
+
+        <section id="draft" class="draft" hidden>
+          <header class="draft__header">
+            <div class="draft__label">
+              <svg class="draft__sparkle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M9 2 L10.5 7.5 L16 9 L10.5 10.5 L9 16 L7.5 10.5 L2 9 L7.5 7.5 Z"/>
+                <path d="M17 12 L17.75 14.25 L20 15 L17.75 15.75 L17 18 L16.25 15.75 L14 15 L16.25 14.25 Z"/>
+              </svg>
+              <span>Suggested Draft</span>
+            </div>
+            <button id="applyBtn" class="apply-btn" title="Copy to clipboard" aria-label="Copy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="5 12 10 17 19 7"/>
+              </svg>
+            </button>
+          </header>
+          <div id="draftText" class="draft__text"></div>
+        </section>
+      </section>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
