@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Grammar Helper Icon</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        background: transparent;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        width: 100%;
+        height: 100%;
+      }
+      #icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+          0 0 0 2px rgba(255, 255, 255, 0.95) inset;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        transition: transform 0.12s ease;
+        animation: pop 0.18s ease-out;
+      }
+      #icon:hover {
+        transform: scale(1.12);
+      }
+      #icon:active {
+        transform: scale(0.96);
+      }
+      @keyframes pop {
+        from {
+          transform: scale(0.6);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="icon" title="Check grammar">G</div>
+    <script src="icon.js"></script>
+  </body>
+</html>

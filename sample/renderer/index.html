@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+    <title>Grammar Helper</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="card">
+      <div class="header" id="drag-region">
+        <span class="dot"></span>
+        <span class="title">Grammar Helper</span>
+        <button id="close-btn" class="close" title="Hide (Esc)">×</button>
+      </div>
+
+      <div class="body">
+        <div id="original" class="original">
+          <span class="muted">Copy text, then press the hotkey.</span>
+        </div>
+
+        <div id="loading" class="loading" hidden>
+          <div class="spinner"></div>
+          Analyzing…
+        </div>
+
+        <div id="suggestions" class="suggestions"></div>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

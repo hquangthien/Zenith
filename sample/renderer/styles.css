@@ -1,0 +1,251 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1a1a1a;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card {
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(250, 250, 250, 0.6);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.close {
+  border: none;
+  background: transparent;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000;
+}
+
+.body {
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+  flex: 1;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.original {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #333;
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  max-height: 80px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+.original .muted {
+  color: #999;
+  font-style: italic;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #888;
+  font-size: 13px;
+  padding: 12px 4px;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ddd;
+  border-top-color: #444;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty {
+  color: #22c55e;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+  font-weight: 500;
+}
+
+.error {
+  color: #ef4444;
+  background: #fef2f2;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.suggestion {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.suggestion:hover {
+  border-color: #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.cat-grammar {
+  border-left: 3px solid #ef4444;
+}
+.cat-style {
+  border-left: 3px solid #3b82f6;
+}
+.cat-spelling {
+  border-left: 3px solid #f59e0b;
+}
+.cat-clarity {
+  border-left: 3px solid #8b5cf6;
+}
+
+.tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.change {
+  font-size: 14px;
+  margin-bottom: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-right: 60px;
+}
+.old {
+  text-decoration: line-through;
+  color: #ef4444;
+}
+.arrow {
+  color: #bbb;
+}
+.new {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.explanation {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.apply {
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.apply:hover {
+  background: #333;
+}
+
+.suggestion.applied {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.suggestion.applied .apply::after {
+  content: " ✓";
+}
+
+.toast {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  animation: fade 2.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+@keyframes fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  10%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+  }
+}
