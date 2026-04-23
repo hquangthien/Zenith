@@ -1,4 +1,4 @@
-// Cross-app focused-editable probe via UI Automation, driven by a PowerShell helper.
+// Cross-app focused-editable probe via UI Automation (Windows) or AppleScript (macOS).
 // Emits:
 //   'focus' (rect)  — an editable field is focused; rect is { left, top, right, bottom } in screen coords
 //   'lost'          — focus moved to a non-editable target (or no focus)
@@ -18,18 +18,22 @@ class FocusTracker extends EventEmitter {
   start() {
     if (this.child) return;
 
-    const script = path.join(__dirname, 'focusTracker.ps1');
-    const args = [
-      '-NoProfile',
-      '-ExecutionPolicy', 'Bypass',
-      '-File', script,
-      '-OwnPid', String(process.pid),
-    ];
-
-    try {
+    let script, args;
+    if (process.platform === 'win32') {
+      script = path.join(__dirname, 'focusTracker.ps1');
+      args = [
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', script,
+        '-OwnPid', String(process.pid),
+      ];
       this.child = spawn('powershell.exe', args, { windowsHide: true });
-    } catch (err) {
-      console.error('[focusTracker] failed to spawn powershell:', err);
+    } else if (process.platform === 'darwin') {
+      script = path.join(__dirname, 'focusTracker.sh');
+      args = [script];
+      this.child = spawn('/bin/bash', args);
+    } else {
+      console.error('[focusTracker] Unsupported platform:', process.platform);
       return;
     }
 

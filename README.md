@@ -4,9 +4,10 @@ Local-first desktop overlay for Vietnamese engineers. Paste a draft, get three r
 
 ## Prerequisites
 
-- **Windows 10/11** (focus detection uses UI Automation via bundled PowerShell — macOS/Linux not supported in this milestone)
+- **Windows 10/11 or macOS 10.15+** (focus detection uses UI Automation on Windows via bundled PowerShell, or Accessibility API on macOS via AppleScript — Linux not supported in this milestone)
 - Node.js 18+
-- Windows PowerShell 5.1 (shipped with Windows) or PowerShell 7
+- Windows: Windows PowerShell 5.1 (shipped with Windows) or PowerShell 7
+- macOS: No additional requirements
 - A local LLM engine exposing an **OpenAI-compatible** `/v1/chat/completions` endpoint:
   - **LM Studio** (default, port 1234) with its local server enabled
   - or **Ollama** on port 11434: `ollama serve` then `ollama pull gemma3:4b`
@@ -29,9 +30,9 @@ npm run dev      # hot-reload: restarts main on main-file changes, reloads rende
 
 ### Detection
 
-Focus tracking uses **UI Automation** (via a small PowerShell helper that calls `System.Windows.Automation.AutomationElement.FocusedElement`). An element is considered editable if it exposes a `ValuePattern` (non-read-only) or a `TextPattern`. This covers native Win32 controls, browsers, Electron/Chromium apps (Teams, Slack, VS Code, Discord), and most WinUI/XAML apps.
+Focus tracking uses **UI Automation** on Windows (via a small PowerShell helper that calls `System.Windows.Automation.AutomationElement.FocusedElement`) or **Accessibility API** on macOS (via AppleScript). An element is considered editable if it exposes a `ValuePattern` or `TextPattern` on Windows, or has role `AXTextField`, `AXTextArea`, or `AXComboBox` on macOS. This covers native controls, browsers, Electron/Chromium apps (Teams, Slack, VS Code, Discord), and most WinUI/XAML apps on Windows, and similar on macOS.
 
-If a specific app doesn't expose automation data (rare), press **`Ctrl+Shift+Space`** to force-show the FAB near your cursor.
+If a specific app doesn't expose automation data (rare), press **`Ctrl+Shift+Space`** (or **`Cmd+Shift+Space`** on macOS) to force-show the FAB near your cursor.
 
 ## Configuration
 

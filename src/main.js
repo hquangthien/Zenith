@@ -266,23 +266,40 @@ function pasteIntoPreviousApp(text) {
   const targetHwnd = lastTargetHwnd;
   hideOverlay();
 
-  const script = path.join(__dirname, 'applyReplace.ps1');
-  const args = [
-    '-NoProfile',
-    '-ExecutionPolicy', 'Bypass',
-    '-File', script,
-    '-Hwnd', String(targetHwnd),
-    '-DelayMs', String(PASTE_DELAY_MS),
-  ];
+  if (process.platform === 'win32') {
+    const script = path.join(__dirname, 'applyReplace.ps1');
+    const args = [
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-File', script,
+      '-Hwnd', String(targetHwnd),
+      '-DelayMs', String(PASTE_DELAY_MS),
+    ];
 
-  console.log(`[apply] paste helper hwnd=${targetHwnd} delay=${PASTE_DELAY_MS}ms`);
-  try {
-    const ps = spawn('powershell.exe', args, { windowsHide: true });
-    ps.on('error', (err) => console.error('[apply] ps spawn error', err.message));
-    ps.stderr.on('data', (d) => console.error('[apply stderr]', d.toString().trim()));
-    ps.on('exit', (code) => console.log(`[apply] ps exit code=${code}`));
-  } catch (err) {
-    console.error('[apply] failed to spawn paste helper', err);
+    console.log(`[apply] paste helper hwnd=${targetHwnd} delay=${PASTE_DELAY_MS}ms`);
+    try {
+      const ps = spawn('powershell.exe', args, { windowsHide: true });
+      ps.on('error', (err) => console.error('[apply] ps spawn error', err.message));
+      ps.stderr.on('data', (d) => console.error('[apply stderr]', d.toString().trim()));
+      ps.on('exit', (code) => console.log(`[apply] ps exit code=${code}`));
+    } catch (err) {
+      console.error('[apply] failed to spawn paste helper', err);
+    }
+  } else if (process.platform === 'darwin') {
+    const script = path.join(__dirname, 'applyReplace.sh');
+    const args = [script, String(PASTE_DELAY_MS)];
+
+    console.log(`[apply] paste helper delay=${PASTE_DELAY_MS}ms`);
+    try {
+      const sh = spawn('/bin/bash', args);
+      sh.on('error', (err) => console.error('[apply] sh spawn error', err.message));
+      sh.stderr.on('data', (d) => console.error('[apply stderr]', d.toString().trim()));
+      sh.on('exit', (code) => console.log(`[apply] sh exit code=${code}`));
+    } catch (err) {
+      console.error('[apply] failed to spawn paste helper', err);
+    }
+  } else {
+    console.error('[apply] Unsupported platform for paste:', process.platform);
   }
 
   setTimeout(() => {
